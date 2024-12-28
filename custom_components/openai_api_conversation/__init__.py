@@ -81,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required("prompt"): cv.string,
-                vol.Optional("size", default="512x320"): cv.string,
+                vol.Optional("size", default="1024x1024"): cv.string,
                 vol.Optional("quality", default="hd"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
             }

@@ -12,8 +12,8 @@ generate_image:
           multiline: true
     size:
       required: false
-      example: "512x320"
-      default: "512x320"
+      example: "1024x1024"
+      default: "1024x1024"
       selector:
         text:
     quality:
