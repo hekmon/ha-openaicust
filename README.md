@@ -17,6 +17,8 @@ Custom OpenAI API for Home Assistant is a fork of the [original](https://github.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hekmon&repository=ha-openaicust&category=integration)
 
+Hit 'Download' at the bottom right corner if you opened it within HACS.
+
 More on HACS [here](https://hacs.xyz/).
 
 ### Manually
