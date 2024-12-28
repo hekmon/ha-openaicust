@@ -1,4 +1,4 @@
-"""Conversation support for OpenAI."""
+"""Conversation support for Custom OpenAI API."""
 
 from collections.abc import Callable
 import json
@@ -34,14 +34,17 @@ from homeassistant.util import ulid
 from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_INSTANCE_NAME,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REPETITION_PENALTY,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REPETITION_PENALTY,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
 )
@@ -89,8 +92,8 @@ class OpenAIConversationEntity(
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
-            manufacturer="OpenAI",
-            model="ChatGPT",
+            manufacturer="Custom OpenAI API",
+            model=entry.data.get(CONF_INSTANCE_NAME, "Custom LLM"),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
         if self.entry.options.get(CONF_LLM_HASS_API):
@@ -246,6 +249,11 @@ class OpenAIConversationEntity(
                     top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                     temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                     user=conversation_id,
+                    extra_body={
+                        "repetition_penalty": options.get(
+                            CONF_REPETITION_PENALTY, RECOMMENDED_REPETITION_PENALTY
+                        ),
+                    },
                 )
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)

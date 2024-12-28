@@ -1,4 +1,4 @@
-"""Config flow for OpenAI Conversation Custom integration."""
+"""Config flow for Custom OpenAI API Conversation integration."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -31,14 +32,20 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     CONF_BASE_URL,
     CONF_CHAT_MODEL,
+    CONF_IMAGE_MODEL,
+    CONF_INSTANCE_NAME,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
-    CONF_RECOMMENDED,
+    CONF_REPETITION_PENALTY,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
+    RECOMMENDED_API_KEY,
+    RECOMMENDED_BASE_URL,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REPETITION_PENALTY,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
 )
@@ -47,15 +54,21 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_BASE_URL): str,
+        vol.Required(CONF_INSTANCE_NAME): str,
+        vol.Required(CONF_API_KEY, default=RECOMMENDED_API_KEY): str,
+        vol.Required(CONF_BASE_URL, default=RECOMMENDED_BASE_URL): str,
     }
 )
 
 RECOMMENDED_OPTIONS = {
-    CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+    CONF_TEMPERATURE: RECOMMENDED_TEMPERATURE,
+    CONF_TOP_P: RECOMMENDED_TOP_P,
+    CONF_REPETITION_PENALTY: RECOMMENDED_REPETITION_PENALTY,
+    CONF_IMAGE_MODEL: RECOMMENDED_IMAGE_MODEL,
 }
 
 
@@ -64,8 +77,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY], base_url=data[CONF_BASE_URL])
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+    client = openai.AsyncOpenAI(
+        api_key=data[CONF_API_KEY],
+        base_url=data[CONF_BASE_URL],
+        http_client=get_async_client(hass),
+    )
+    await client.with_options(timeout=10.0).models.list()
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -95,7 +112,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title="ChatGPT",
+                title=user_input[CONF_INSTANCE_NAME],
                 data=user_input,
                 options=RECOMMENDED_OPTIONS,
             )
@@ -117,9 +134,6 @@ class OpenAIOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.last_rendered_recommended = config_entry.options.get(
-            CONF_RECOMMENDED, False
-        )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -128,19 +142,9 @@ class OpenAIOptionsFlow(OptionsFlow):
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
 
         if user_input is not None:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
-                return self.async_create_entry(title="", data=user_input)
-
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+            return self.async_create_entry(title="", data=user_input)
 
         schema = openai_config_option_schema(self.hass, options)
         return self.async_show_form(
@@ -182,36 +186,35 @@ def openai_config_option_schema(
             description={"suggested_value": options.get(CONF_LLM_HASS_API)},
             default="none",
         ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
+        vol.Optional(
+            CONF_CHAT_MODEL,
+            description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+            default=RECOMMENDED_CHAT_MODEL,
+        ): str,
+        vol.Optional(
+            CONF_MAX_TOKENS,
+            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+            default=RECOMMENDED_MAX_TOKENS,
+        ): int,
+        vol.Optional(
+            CONF_TEMPERATURE,
+            description={"suggested_value": options.get(CONF_TEMPERATURE)},
+            default=RECOMMENDED_TEMPERATURE,
+        ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+        vol.Optional(
+            CONF_TOP_P,
+            description={"suggested_value": options.get(CONF_TOP_P)},
+            default=RECOMMENDED_TOP_P,
+        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        vol.Optional(
+            CONF_REPETITION_PENALTY,
+            description={"suggested_value": options.get(CONF_REPETITION_PENALTY)},
+            default=RECOMMENDED_REPETITION_PENALTY,
+        ): NumberSelector(NumberSelectorConfig(min=1, max=2, step=0.05)),
+        vol.Optional(
+            CONF_IMAGE_MODEL,
+            description={"suggested_value": options.get(CONF_IMAGE_MODEL)},
+            default=RECOMMENDED_IMAGE_MODEL,
+        ): str,
     }
-
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
-    schema.update(
-        {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-        }
-    )
     return schema

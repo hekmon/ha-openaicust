@@ -1,4 +1,4 @@
-"""The OpenAI Conversation Custom integration."""
+"""The Custom OpenAI API Conversation integration."""
 
 from __future__ import annotations
 
@@ -22,7 +22,13 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, CONF_BASE_URL
+from .const import (
+    CONF_BASE_URL,
+    CONF_IMAGE_MODEL,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_IMAGE_MODEL,
+)
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
@@ -50,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             response = await client.images.generate(
-                model="dall-e-3",
+                model=entry.options.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL),
                 prompt=call.data["prompt"],
                 size=call.data["size"],
                 quality=call.data["quality"],
@@ -75,10 +81,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required("prompt"): cv.string,
-                vol.Optional("size", default="1024x1024"): vol.In(
-                    ("1024x1024", "1024x1792", "1792x1024")
-                ),
-                vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
+                vol.Optional("size", default="512x320"): cv.string,
+                vol.Optional("quality", default="hd"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
             }
         ),

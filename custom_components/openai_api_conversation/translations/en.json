@@ -1,0 +1,77 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "base_url": "Base URL",
+                    "instance_name": "Instance name"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "invalid_config_entry": {
+            "message": "Invalid config entry provided. Got {config_entry}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "chat_model": "Model",
+                    "image_model": "Model",
+                    "llm_hass_api": "Control Home Assistant",
+                    "max_tokens": "Maximum tokens to return in response",
+                    "prompt": "Instructions",
+                    "repetition_penalty": "Repetition Penalty",
+                    "temperature": "Temperature",
+                    "top_p": "Top P"
+                },
+                "data_description": {
+                    "chat_model": "Model to use for generating text",
+                    "image_model": "Model to use for generating images",
+                    "max_tokens": "The maximum number of tokens to generate in the completion",
+                    "prompt": "Instruct how the LLM should respond. This can be a template.",
+                    "repetition_penalty": "Penalty for repeating tokens. Higher values discourage repetition. Only has effect if backend is vLLM.",
+                    "temperature": "Controls randomness of outputs. Lower values make the model more deterministic.",
+                    "top_p": "Controls diversity via nucleus sampling"
+                }
+            }
+        }
+    },
+    "services": {
+        "generate_image": {
+            "description": "Turn a prompt into an image",
+            "fields": {
+                "config_entry": {
+                    "description": "The config entry to use for this action",
+                    "name": "Config Entry"
+                },
+                "prompt": {
+                    "description": "The text to turn into an image",
+                    "example": "A photo of a dog",
+                    "name": "Prompt"
+                },
+                "quality": {
+                    "description": "The quality of the image that will be generated",
+                    "name": "Quality"
+                },
+                "size": {
+                    "description": "The size of the image to generate",
+                    "name": "Size"
+                },
+                "style": {
+                    "description": "The style of the generated image",
+                    "name": "Style"
+                }
+            },
+            "name": "Generate image"
+        }
+    }
+}
