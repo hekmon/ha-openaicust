@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CONF_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -47,6 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_BASE_URL): str,
     }
 )
 
@@ -62,7 +64,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
+    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY], base_url=data[CONF_BASE_URL])
     await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 

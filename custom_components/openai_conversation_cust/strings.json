@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "Base URL"
         }
       }
     },

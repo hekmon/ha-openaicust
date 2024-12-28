@@ -22,7 +22,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, CONF_BASE_URL
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
@@ -91,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
+        base_url=entry.data[CONF_BASE_URL],
         http_client=get_async_client(hass),
     )
 
