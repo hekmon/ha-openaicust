@@ -1,8 +1,8 @@
-"""Constants for the OpenAI Conversation integration."""
+"""Constants for the OpenAI Conversation Custom integration."""
 
 import logging
 
-DOMAIN = "openai_conversation"
+DOMAIN = "openai_conversation_cust"
 LOGGER = logging.getLogger(__package__)
 
 CONF_RECOMMENDED = "recommended"
