@@ -1,6 +1,6 @@
 {
   "domain": "openai_api_conversation",
-  "name": "Custom OpenAI API",
+  "name": "Custom OpenAI API Conversation",
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@hekmon"],
   "config_flow": true,
