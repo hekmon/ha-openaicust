@@ -210,7 +210,7 @@ def openai_config_option_schema(
             CONF_REPETITION_PENALTY,
             description={"suggested_value": options.get(CONF_REPETITION_PENALTY)},
             default=RECOMMENDED_REPETITION_PENALTY,
-        ): NumberSelector(NumberSelectorConfig(min=1, max=2, step=0.05)),
+        ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
         vol.Optional(
             CONF_IMAGE_MODEL,
             description={"suggested_value": options.get(CONF_IMAGE_MODEL)},
