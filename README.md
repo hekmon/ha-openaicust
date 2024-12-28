@@ -1,7 +1,6 @@
 # Custom OpenAI API for Home Assistant
 
 [![Validate with hassfest](https://github.com/hekmon/ha-openaicust/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/hekmon/ha-openaicust/actions/workflows/hassfest.yaml)
-[![Validate with HACS](https://github.com/hekmon/ha-openaicust/actions/workflows/hacs.yaml/badge.svg)](https://github.com/hekmon/ha-openaicust/actions/workflows/hacs.yaml)
 
 Custom OpenAI API for Home Assistant is a fork of the [original](https://github.com/home-assistant/core/tree/2024.12.5/homeassistant/components/openai_conversation) [OpenAI Conversation](https://www.home-assistant.io/integrations/openai_conversation/) integration with additional features and improvements such as:
 
