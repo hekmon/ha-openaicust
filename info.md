@@ -5,7 +5,7 @@
 
 Custom OpenAI API for Home Assistant is a fork of the [original](https://github.com/home-assistant/core/tree/2024.12.5/homeassistant/components/openai_conversation) [OpenAI Conversation](https://www.home-assistant.io/integrations/openai_conversation/) integration with additional features and improvements such as:
 
-- Custom base URL for OpenAI API allowing to use it with any model/inference server (tools still must be supported by both of them) with OpenAI API support
+- Custom base URL for OpenAI API allowing to use it with any model and any inference server with OpenAI API support (tools still must be supported by both of them)
 - Support for multiple instances
 - vLLM custom `repetition_penalty` parameter
 - Image size free input

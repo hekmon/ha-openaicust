@@ -1,0 +1,5 @@
+{
+  "name": "Custom OpenAI API Conversation",
+  "hide_default_branch": true,
+  "homeassistant": "2024.12.5"
+}
