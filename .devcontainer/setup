@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Setup script for Home Assistant custom component development
+# Based on the official Home Assistant Core setup script
+
+# Stop on errors
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+WORKSPACE_DIR="/workspaces/core"
+
+echo "Setting up Home Assistant development environment..."
+echo "=================================================="
+
+# Verify Home Assistant Core repository exists
+if [ ! -d "${WORKSPACE_DIR}" ]; then
+    echo "ERROR: Home Assistant Core not found at ${WORKSPACE_DIR}"
+    echo "Did the Dockerfile fail to clone the repository?"
+    exit 1
+fi
+
+# Add default vscode settings if not existing (optional, skip if not present)
+VSCODE_SETTINGS="${ROOT_DIR}/.vscode/settings.json"
+VSCODE_SETTINGS_TEMPLATE="${ROOT_DIR}/.vscode/settings.default.jsonc"
+if [ ! -f "${VSCODE_SETTINGS}" ] && [ -f "${VSCODE_SETTINGS_TEMPLATE}" ]; then
+    echo "Copying VS Code settings template..."
+    mkdir -p "$(dirname "${VSCODE_SETTINGS}")"
+    cp "${VSCODE_SETTINGS_TEMPLATE}" "${VSCODE_SETTINGS}"
+fi
+
+# Activate virtual environment (created by Dockerfile)
+VENV_DIR="${HOME}/.local/ha-venv"
+if [ ! -d "${VENV_DIR}" ]; then
+    echo "Creating Python virtual environment in ${VENV_DIR}..."
+    if command -v uv &> /dev/null; then
+        uv venv "${VENV_DIR}"
+    else
+        python3 -m venv "${VENV_DIR}"
+    fi
+fi
+
+echo "Activating virtual environment..."
+source "${VENV_DIR}/bin/activate"
+
+# Ensure uv is available
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    python3 -m pip install uv
+fi
+
+# Install Home Assistant Core in development mode
+echo "Installing Home Assistant Core in development mode..."
+cd "${WORKSPACE_DIR}"
+uv pip install -e . --config-settings editable_mode=compat
+
+# Install core dependencies
+echo "Installing core dependencies..."
+uv pip install -r requirements.txt
+
+# Install debugpy for debugging support
+echo "Installing debugpy..."
+uv pip install debugpy
+
+# Create config directory structure
+echo "Setting up config directory..."
+mkdir -p "${WORKSPACE_DIR}/config/custom_components"
+
+# Link the custom component from the workspace into HA config
+echo "Linking custom component..."
+CONTAINER_WORKSPACE="${CONTAINER_WORKSPACE_FOLDER:-/workspaces/ha-openaicust}"
+
+# Verify the custom component source exists
+if [ ! -d "${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation" ]; then
+    echo "ERROR: Custom component not found at ${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation"
+    exit 1
+fi
+
+ln -sf "${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation" \
+    "${WORKSPACE_DIR}/config/custom_components/openai_api_conversation"
+
+# Copy configuration.yaml if it doesn't exist
+if [ ! -f "${WORKSPACE_DIR}/config/configuration.yaml" ]; then
+    echo "Copying configuration.yaml..."
+    cp "${CONTAINER_WORKSPACE}/.devcontainer/configuration.yaml" \
+       "${WORKSPACE_DIR}/config/configuration.yaml"
+fi
+
+# Ensure logger configuration exists in configuration.yaml
+if ! grep -q "logger:" "${WORKSPACE_DIR}/config/configuration.yaml"; then
+    echo "Adding logger configuration..."
+    cat >> "${WORKSPACE_DIR}/config/configuration.yaml" << 'EOF'
+
+logger:
+  default: info
+  logs:
+    custom_components.openai_api_conversation: debug
+EOF
+fi
+
+# Add convenient aliases to bashrc
+echo "Adding shell aliases..."
+if ! grep -q "alias hass=" ~/.bashrc 2>/dev/null; then
+    cat >> ~/.bashrc << 'EOF'
+
+# Home Assistant development aliases
+alias hass="hass -c /workspaces/core/config"
+alias hass-test="pytest tests/"
+EOF
+fi
+
+# Configure git safe directories
+echo "Configuring git safe directories..."
+git config --global --add safe.directory "${WORKSPACE_DIR}" 2>/dev/null || true
+git config --global --add safe.directory "${CONTAINER_WORKSPACE}" 2>/dev/null || true
+
+echo ""
+echo "=================================================="
+echo "Setup complete!"
+echo ""
+echo "To start Home Assistant:"
+echo "  hass"
+echo ""
+echo "To run tests:"
+echo "  pytest tests/"
+echo ""
+echo "Your custom component is available at:"
+echo "  ${WORKSPACE_DIR}/config/custom_components/openai_api_conversation"
+echo "=================================================="

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Bootstrap script for Home Assistant custom component development
+# Based on the official Home Assistant Core bootstrap script
+# https://github.com/home-assistant/core/blob/dev/script/bootstrap
+
+# Stop on errors
+set -e
+
+# Get the directory of this script and resolve to real path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_DIR="/workspaces/core"
+CONTAINER_WORKSPACE="${CONTAINER_WORKSPACE_FOLDER:-/workspaces/ha-openaicust}"
+
+# Verify Home Assistant Core repository exists
+if [ ! -d "${WORKSPACE_DIR}" ]; then
+    echo "ERROR: Home Assistant Core not found at ${WORKSPACE_DIR}"
+    exit 1
+fi
+
+cd "${WORKSPACE_DIR}"
+
+echo "Installing Home Assistant Core in development mode..."
+uv pip install \
+  -e . \
+  --config-settings editable_mode=compat \
+  --upgrade
+
+# Ensure the custom component symlink exists
+echo "Ensuring custom component symlink..."
+if [ ! -L "${WORKSPACE_DIR}/config/custom_components/openai_api_conversation" ]; then
+    # Verify the custom component source exists
+    if [ ! -d "${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation" ]; then
+        echo "WARNING: Custom component not found at ${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation"
+        echo "  Skipping symlink creation."
+    else
+        mkdir -p "${WORKSPACE_DIR}/config/custom_components"
+        ln -sf "${CONTAINER_WORKSPACE}/custom_components/openai_api_conversation" \
+            "${WORKSPACE_DIR}/config/custom_components/openai_api_conversation"
+        echo "  Symlink created."
+    fi
+else
+    echo "  Symlink already exists."
+fi
+
+# Quick health check
+if command -v hass &> /dev/null; then
+    echo "Bootstrap complete! Home Assistant is ready."
+    echo ""
+    echo "To start Home Assistant, run: hass"
+else
+    echo "Warning: hass command not found. Reinstalling..."
+    uv pip install -e . --config-settings editable_mode=compat
+    echo "Bootstrap complete!"
+fi

@@ -1,0 +1,16 @@
+default_config:
+
+# Enable debug logging for the custom component
+logger:
+    default: info
+    logs:
+        custom_components.openai_api_conversation: debug
+
+# Enable debugpy for VS Code debugging
+debugpy:
+    start: true
+    wait: false
+    port: 5678
+
+# Note: Your custom component will be loaded automatically via default_config:
+# No need to explicitly configure it here unless you need specific settings
